@@ -53,6 +53,7 @@ func main() {
 	b, err := tb.NewBot(tb.Settings{
 		Token:  "TOKEN_HERE",
 		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
+		HTTPTimeout: 10,
 	})
 
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -20,11 +21,19 @@ func NewBot(pref Settings) (*Bot, error) {
 		pref.Updates = 100
 	}
 
+	var client *http.Client
+	if pref.HTTPTimeout == 0 {
+		client = http.DefaultClient
+	} else {
+		client = &http.Client{Timeout: time.Duration(pref.HTTPTimeout) * time.Second}
+	}
+
 	bot := &Bot{
 		Token:   pref.Token,
 		Updates: make(chan Update, pref.Updates),
 		Poller:  pref.Poller,
 
+		client:  client,
 		handlers: make(map[string]interface{}),
 		stop:     make(chan struct{}),
 		reporter: pref.Reporter,
@@ -46,6 +55,7 @@ type Bot struct {
 	Updates chan Update
 	Poller  Poller
 
+	client  *http.Client
 	handlers map[string]interface{}
 	reporter func(error)
 	stop     chan struct{}
@@ -66,6 +76,9 @@ type Settings struct {
 	// Reporter is a callback function that will get called
 	// on any panics recovered from endpoint handlers.
 	Reporter func(error)
+
+	// Http timeout
+	HTTPTimeout int
 }
 
 // Update object represents an incoming update.
